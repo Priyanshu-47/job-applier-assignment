@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1694000000000,
+      "tag": "0000_initial",
+      "name": "initial"
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1694000001000,
+      "tag": "0001_outbox_unique_alert_job",
+      "name": "outbox_unique_alert_job"
+    }
+  ]
+}
