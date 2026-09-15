@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+coverage
+*.tsbuildinfo
+INTERVIEW_DEFENSE.md
+HANDWRITTEN_CORE_CHEATSHEET.md
+INTERVIEW_SCENARIOS.md
+.env
+.env.local
