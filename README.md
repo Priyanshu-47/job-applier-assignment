@@ -115,21 +115,3 @@ Jobs and filters are already structured. Matching does not retrieve documents or
 
 Stable fields are SHA-256 hashed. Implementation is **per-row** SELECT/INSERT/UPDATE, not bulk COPY (see ARCHITECTURE.md).
 
-## Known limitations / what I'd build next
-
-**Scale-up gap (explicit):** Matching is a full alert×job nested loop (no inverted index / candidate generation). Ingestion is one SQL round-trip per row, not staging COPY + set-based UPSERT. Fine for the sample seed; not 150k alerts or 1.8M rows/day. Plans are in ARCHITECTURE.md only.
-
-Other current limits:
-
-1. No authentication; `user_id` defaults to `"default-user"`; no RLS
-2. Dashboard does not list ingested jobs as first-class rows; outbox is simulated (no SES)
-3. Ingestion tests do not call `ingestJobs`; no API→DB integration tests
-4. No exponential backoff, token-bucket, or DLQ on the outbox
-5. Screen recording of setup / main flow / tests / retry is not in this repository yet (will be added separately)
-6. Matching is a nested loop and ingest is per-row (see ARCHITECTURE.md scale-up plan)
-
-**Next (after the demo):** inverted-index candidate generation; bulk ingest merge; auth + tenant RLS; real email + rate limits; integration tests.
-
-## License
-
-MIT
