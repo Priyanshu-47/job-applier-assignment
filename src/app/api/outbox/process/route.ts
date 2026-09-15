@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await processOutbox(batchSize);
+    const simulateFailure = Boolean(body.simulateFailure);
+    const result = await processOutbox(batchSize, { simulateFailure });
 
     return NextResponse.json({
       success: true,

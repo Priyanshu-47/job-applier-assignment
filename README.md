@@ -10,7 +10,7 @@ A Next.js (App Router) + PostgreSQL job-alert demo: parse a natural-language ale
 | **Start** | 15 Sep 2026, 10:30 |
 | **End** | 15 Sep 2026, 15:00 |
 
-Unfinished work is listed under Known limitations. A 3–5 minute walkthrough recording will be attached separately after this code submission.
+**Walkthrough recording (3–5 min):** [Google Drive](https://drive.google.com/file/d/1hcxcYpRBmBNEjBXoUQqAr2iS8dJPZH9M/view?usp=sharing)
 
 ## Quick Start
 
@@ -59,6 +59,7 @@ The UI heading and document title are “Job Alert System”.
 |----------|--------|-------------|
 | `/api/alerts/parse` | POST | Parse natural language into structured filters |
 | `/api/alerts` | GET/POST/DELETE | CRUD operations for alerts |
+| `/api/jobs` | GET | List ingested jobs |
 | `/api/jobs/ingest` | POST | Batch ingest job records (per-row writes) |
 | `/api/matches/run` | POST | Nested-loop match of all active alerts × all jobs |
 | `/api/outbox/process` | POST | Process notification outbox (`batchSize`) |
@@ -114,4 +115,3 @@ Jobs and filters are already structured. Matching does not retrieve documents or
 ### Change Detection
 
 Stable fields are SHA-256 hashed. Implementation is **per-row** SELECT/INSERT/UPDATE, not bulk COPY (see ARCHITECTURE.md).
-

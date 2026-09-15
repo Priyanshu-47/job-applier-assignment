@@ -33,6 +33,7 @@ export default function AlertsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [parsing, setParsing] = useState(false);
+  const [error, setError] = useState("");
 
   const handleParse = async () => {
     if (!query.trim()) return;
@@ -41,6 +42,7 @@ export default function AlertsPage() {
     setParseResult(null);
     setEditedFilters(null);
     setSaved(false);
+    setError("");
 
     try {
       const response = await fetch("/api/alerts/parse", {
@@ -50,12 +52,16 @@ export default function AlertsPage() {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || "Parse failed");
+        return;
+      }
       setParseResult(data);
       if (data.filters) {
         setEditedFilters({ ...data.filters });
       }
-    } catch (error) {
-      console.error("Parse error:", error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Parse failed");
     } finally {
       setParsing(false);
     }
@@ -65,6 +71,7 @@ export default function AlertsPage() {
     if (!editedFilters || !query) return;
 
     setSaving(true);
+    setError("");
     try {
       const response = await fetch("/api/alerts", {
         method: "POST",
@@ -82,9 +89,12 @@ export default function AlertsPage() {
         setParseResult(null);
         setEditedFilters(null);
         setAlertName("");
+      } else {
+        const data = await response.json().catch(() => ({}));
+        setError(data.error || "Save failed");
       }
-    } catch (error) {
-      console.error("Save error:", error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
@@ -96,10 +106,29 @@ export default function AlertsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 20 }}>
-      <h1 style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, color: "#1a1a1a" }}>
+      <h1 style={{ fontSize: 24, fontWeight: "bold", marginBottom: 8, color: "#1a1a1a" }}>
         Create Job Alert
       </h1>
+      <p style={{ color: "#4a4a4a", marginBottom: 20 }}>
+        Parse with AI, review the filters, then save. Use <strong>Dashboard</strong> in the header
+        to ingest jobs and run matching.
+      </p>
+
+      {error && (
+        <div
+          style={{
+            padding: 12,
+            background: "#fdecea",
+            border: "1px solid #f5c2c0",
+            color: "#8a1f11",
+            borderRadius: 4,
+            marginBottom: 16,
+          }}
+        >
+          {error}
+        </div>
+      )}
 
       {saved && (
         <div
@@ -111,7 +140,7 @@ export default function AlertsPage() {
             marginBottom: 20,
           }}
         >
-          Alert saved successfully!
+          Alert saved. Open the Dashboard to ingest jobs and run matching.
         </div>
       )}
 
@@ -130,6 +159,8 @@ export default function AlertsPage() {
             border: "1px solid #ccc",
             borderRadius: 4,
             fontSize: 14,
+            color: "#1a1a1a",
+            background: "#ffffff",
           }}
         />
         <button

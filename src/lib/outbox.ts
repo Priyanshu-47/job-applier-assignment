@@ -11,8 +11,49 @@ export interface ProcessResult {
 
 const STALE_PROCESSING_MS = 5 * 60 * 1000;
 
-export async function processOutbox(batchSize: number = 100): Promise<ProcessResult> {
+export async function processOutbox(
+  batchSize: number = 100,
+  options: { simulateFailure?: boolean } = {}
+): Promise<ProcessResult> {
   const result: ProcessResult = { processed: 0, sent: 0, failed: 0, retried: 0 };
+
+  if (options.simulateFailure) {
+    await db.transaction(async (tx) => {
+      const ready = await tx
+        .select({ id: outbox.id })
+        .from(outbox)
+        .where(
+          or(
+            eq(outbox.status, "pending"),
+            and(eq(outbox.status, "failed"), sql`${outbox.attempts} < ${outbox.maxAttempts}`)
+          )
+        )
+        .limit(1);
+
+      if (ready.length > 0) {
+        return;
+      }
+
+      const sentRows = await tx
+        .select({ id: outbox.id })
+        .from(outbox)
+        .where(eq(outbox.status, "sent"))
+        .limit(5);
+
+      for (const row of sentRows) {
+        await tx
+          .update(outbox)
+          .set({
+            status: "pending",
+            attempts: 0,
+            lastError: null,
+            sentAt: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(outbox.id, row.id));
+      }
+    });
+  }
 
   const pendingItems = await db.transaction(async (tx) => {
     const staleBefore = new Date(Date.now() - STALE_PROCESSING_MS);
@@ -54,7 +95,7 @@ export async function processOutbox(batchSize: number = 100): Promise<ProcessRes
     result.processed++;
 
     try {
-      await simulateEmailSend(item.matchId);
+      await simulateEmailSend(item.matchId, options.simulateFailure);
 
       await db
         .update(outbox)
@@ -95,7 +136,10 @@ export async function processOutbox(batchSize: number = 100): Promise<ProcessRes
   return result;
 }
 
-async function simulateEmailSend(matchId: string): Promise<void> {
+async function simulateEmailSend(matchId: string, simulateFailure?: boolean): Promise<void> {
+  if (simulateFailure) {
+    throw new Error("Simulated email provider failure");
+  }
   const matchDetails = await db
     .select({
       matchId: matches.id,
